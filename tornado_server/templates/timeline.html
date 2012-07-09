@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block body %}		 
+	<a href="/" style="text-decoration: none"><h1>Tornado Search</h1></a>
+
+  <div class="page-header" align="left"> <h3>Change Timeline:</h3><h6>{{ result_amount }} results </h6></div>
+	
+  <div align="left">
+  {% set  i=0 %}
+  {% for entry in entries %}
+    {{ modules.Entry(entry) }}
+    <div>
+	{% for cp in change_path_set[i] %}
+		<ul>
+		  <li>
+			{% if cp.action == 'M' %}  
+				<span class="label">Modified</span>
+			{% elif cp.action == 'A' %}
+				<span class="label">Added</span>
+			{% elif cp.action == 'D' %}
+			    <span class="label">Deleted</span>
+			{% end %}
+			{% if cp.action == 'M' and cp.diff_id != None and cp.filename != None %}
+				<a href="/diff?cp_id={{cp.id}}">{{ cp.path }}</a>
+		    {% else %}
+				{{ cp.path }}
+			{% end %}
+		  </li>
+		</ul>
+	{% end %}
+	{% set i=i+1 %}
+    </div>
+  {% end %}
+   
+  
+  </div>
+  
+   <div class="pagination" align="center">
+        <ul>
+          {% if result_amount > 10 %}
+			  {% if actived_page != 1%}
+				<li><a href="/timeline?offset={{actived_page-1}}&mid={{(index_range[1]+index_range[-1])/2}}">&laquo;</a></li>   
+			  {% end %}	
+			
+			  {% for i in range(mid-5, mid+5) %}
+				{% if actived_page == i %}
+					<li class="active"><a href="#">{{i}}</a></li>
+				{% else %}
+					<li><a href="/timeline?offset={{i}}&mid={{(index_range[1]+index_range[-1])/2}}">{{i}}</a></li>
+				{% end %}
+			  {% end %}
+			  
+			  {% if actived_page < index_range[-1] %}
+				<li><a href="/timeline?offset={{actived_page+1}}&mid={{(index_range[1]+index_range[-1])/2}}">&raquo;</a></li>
+			  {% end %}
+		  {% end %}
+		
+        </ul>
+    </div>
+	
+	<script src="{{ static_url( "js/jquery.js" )}}"></script>
+	<script src="{{ static_url( "js/bootstrap-collapse.js" )}}"></script>
+{% end %}

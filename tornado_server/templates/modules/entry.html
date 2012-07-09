@@ -1,0 +1,10 @@
+<div class="entry">
+	<p>
+	{{entry.version}}
+	{{entry.date_time}}
+	<strong>{{entry.acct_name}}</strong>
+	{% if entry.comments <> None %}
+		<blockquote>{{entry.comments}}</blockquote>
+	{% end %}
+	</p>
+</div>
