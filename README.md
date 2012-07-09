@@ -1,6 +1,7 @@
 Stannis  
 =======
 
-Code Brower for SVN
+Code browser for SVN
 
-Python, Tornado
+Python, Tornado, MySQL
+
