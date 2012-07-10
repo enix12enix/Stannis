@@ -5,7 +5,7 @@
   <div class="page-header" align="left"> <h3>Change Timeline:</h3><h6>{{ result_amount }} results </h6></div>
 	
   <div align="left">
-  {% set  i=0 %}
+  {% set i=0 %}
   {% for entry in entries %}
     {{ modules.Entry(entry) }}
     <div>
@@ -37,20 +37,20 @@
    <div class="pagination" align="center">
         <ul>
           {% if result_amount > 10 %}
-			  {% if actived_page != 1%}
-				<li><a href="/timeline?offset={{actived_page-1}}&mid={{(index_range[1]+index_range[-1])/2}}">&laquo;</a></li>   
+			  {% if actived_page != 1 %}
+				<li><a href="/timeline?offset={{actived_page-1}}&start={{start_index}}">&laquo;</a></li>   
 			  {% end %}	
 			
-			  {% for i in range(mid-5, mid+5) %}
+			  {% for i in range(start_index, end_index) %}
 				{% if actived_page == i %}
 					<li class="active"><a href="#">{{i}}</a></li>
 				{% else %}
-					<li><a href="/timeline?offset={{i}}&mid={{(index_range[1]+index_range[-1])/2}}">{{i}}</a></li>
+					<li><a href="/timeline?offset={{i}}&start={{start_index}}">{{i}}</a></li>
 				{% end %}
 			  {% end %}
 			  
-			  {% if actived_page < index_range[-1] %}
-				<li><a href="/timeline?offset={{actived_page+1}}&mid={{(index_range[1]+index_range[-1])/2}}">&raquo;</a></li>
+			  {% if actived_page < end_index-1 %}
+				<li><a href="/timeline?offset={{actived_page+1}}&start={{start_index}}">&raquo;</a></li>
 			  {% end %}
 		  {% end %}
 		

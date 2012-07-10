@@ -130,13 +130,23 @@ class TimelineHandler(tornado.web.RequestHandler):
 
 	def get(self):
 		offset = int(self.get_argument("offset", 1))
-		mid = int(self.get_argument("mid", 6))
+		start_index = int(self.get_argument("start", 1))
 		
 		result_amount = self.db.get("select count(*) as count from svn_log")
 		page_size = result_amount['count']/PAGE_ITEM
 		if result_amount['count'] % PAGE_ITEM != 0:
 			page_size = page_size +1
+
+
+		if offset -5 >= 1:
+			start_index = offset - 5 
+
+		if 	start_index + 10 < page_size:
+			end_index = start_index + 10
+		else:
+			end_index = page_size
 		
+
 		check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", \
 				(offset -1)*PAGE_ITEM)
 	
@@ -149,13 +159,10 @@ class TimelineHandler(tornado.web.RequestHandler):
 			entry.id)
 			if len(change_path_entries) != 0:
 				change_path_set.append(change_path_entries)
-		
-		print '------------------'
-		print mid
-		print range(mid-5, mid+5)
-			#index_range=range(mid-5, mid+5)
 
-		self.render("timeline.html", result_amount=result_amount['count'], mid=mid, \
+
+
+		self.render("timeline.html", result_amount=result_amount['count'], start_index=start_index, end_index=end_index, \
 			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set)
 
 
