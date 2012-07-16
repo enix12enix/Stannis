@@ -59,16 +59,16 @@ def get_file_by_version(svn_url_prefix, path, version):
 			dir_path = create_dir(path[:i+1] + version)
 						
 			filename =path[i+1:] 
-			print "filename = " + filename
+			logging.debug("filename = " + filename)
 
 			local_path = dir_path + "/" + filename
 			if os.path.isfile(local_path):
-				print "file existed..."
+				logging.debug("file existed: " + filename)
 				return local_path
 
 			# checkout specfic version: svn cat -r version svn_url > file_name
 			co_cmd = "svn cat -r " + version + " " + svn_url_prefix + path + " >> " + local_path
-			print "execute cmd: " + co_cmd
+			logging.debug("execute cmd: " + co_cmd)
 			ret = os.system(co_cmd)	
 			return local_path
 
@@ -79,13 +79,14 @@ def create_dir(dir_path):
 	if dir_path[0] == "/":
 		dir_path = dir_path[1:]
 	if os.path.isdir(dir_path):
-		print "existing dir..."
+		logging.debug("existing dir..." + dir_path) 
 	else:
 		ret = os.makedirs(dir_path)
-		print "create dir: " + dir_path
+		logging.debug("create dir: " + dir_path)
 	return dir_path
 
 
+# To be removed
 def filter_html(diff_file):
 	start_tag = "<table"
 	end_tag = '''    </table>\n'''
@@ -106,11 +107,12 @@ def filter_html(diff_file):
 	
 	
 class GenDiffer:
-	def __init__(self, svn_url_prefix, svn_file_url, version):
+	def __init__(self, svn_url_prefix, svn_file_url, version, diff_type='u'):
 			self.svn_url_prefix = svn_url_prefix
 			self.svn_file_url = svn_file_url
 			self.version = version
 			self.file_svn_url = svn_url_prefix + svn_file_url
+			self.diff_type = diff_type
 			
 	# TODO version param ?
 	def get_code(self):
@@ -155,7 +157,7 @@ class GenDiffer:
 		logging.info('make diff ...')
 		delete_file_if_exists(temp_diff)
 		try: 
-			differ = CodeDiffer(old_code_path, new_code_path, temp_diff, None, 0, 0, 3, 'title test', 'comments test')
+			differ = CodeDiffer(old_code_path, new_code_path, temp_diff, self.diff_type)
 			differ.make_diff()
 		except CodeDifferError, e:
 			logging.error('CodeDiffer error: %s', e)

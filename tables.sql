@@ -2,6 +2,8 @@ drop table if exists `stannis`.`search_history`;
 drop table if exists `stannis`.`svn_diffs`;
 drop table if exists `stannis`.`svn_change_path`;
 drop table if exists `stannis`.`svn_log`;
+drop table if exists  `stannis`.`svn_linked_change_path`; 
+drop table if exists  `stannis`.`svn_module`; 
 
 CREATE  TABLE `stannis`.`svn_log` (
 

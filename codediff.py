@@ -432,7 +432,7 @@ class CodeDiffer:
     ########## templates end ##########
 
 
-    def __init__(self, obj1, obj2, output, input_list=None, strip_level=0,
+    def __init__(self, obj1, obj2, output, diff_type='u', input_list=None, strip_level=0,
                        wrap_num=0, context_line=3, title='', comments=''):
         self.__obj1 = obj1
         self.__obj2 = obj2
@@ -444,6 +444,7 @@ class CodeDiffer:
         self.__file_list = []
         self.__title = title
         self.__comments = comments
+        self.__diff_type = diff_type
         # TODO: provide options
         self.__dir_ignore_list = _global_dir_ignore_list
         self.__file_ignore_list = _global_file_ignore_list
@@ -458,8 +459,17 @@ class CodeDiffer:
         from_title = make_title(self.__obj1, self.__wrap_num)
         to_title = make_title(self.__obj2, self.__wrap_num)
         use_context = self.__context_line != 0
-        html = udiff_lines(from_lines, to_lines, from_title, to_title,
-                           use_context, self.__wrap_num, self.__context_line)
+        diff_type = self.__diff_type
+        # TODO
+        from_date = None
+        to_date = None
+        if diff_type == 'u':
+            html = udiff_lines(from_lines, to_lines, from_title, to_title,
+                           from_date, to_date, self.__context_line)
+        elif diff_type == 'f':
+            html = sdiff_lines(from_lines, to_lines, from_title, to_title, False,
+                                   self.__wrap_num, self.__context_line)
+
         write_file(self.__output, html)
 
     def __is_igore_dir(self, dir):

@@ -146,7 +146,7 @@ def delete_file_if_exists(file):
 		
 def pull_log(svn_url, log_file_name):
 	delete_file_if_exists(log_file_name)
-	cmd = "svn -v log -q " + svn_url + " -l 100 >> " + log_file_name
+	cmd = "svn -v log " + svn_url + " -l 100 >> " + log_file_name
 	ret = os.system(cmd)
 
 		
