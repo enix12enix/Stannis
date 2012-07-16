@@ -11,7 +11,9 @@ import tornado.database
 svn_url_prefix = "http://svn.sc4.paypal.com/svn/projects"
 #svn_url_prefix = "http://v8.googlecode.com/svn"
 split_line = "------------------------------------------------------------------------\n"
-db = tornado.database.Connection("localhost:3306", "test_pull", "root", "mysql")
+
+# TODO set in conf file
+db = tornado.database.Connection("localhost:3306", "stannis", "root", "mysql")
 
 #svn_url = "http://v8.googlecode.com/svn/trunk/sc/"
 
@@ -125,7 +127,7 @@ def gen_diff(action, path, version, cp_id):
 		# not directory
 		if path[-1] <> "/":
 			logging.info('code path: %s', path)
-			df = GenDiffer(svn_url_prefix + path, version)
+			df = GenDiffer(svn_url_prefix , path, version)
 			df_html = df.gen_differ()
 			if df_html <> None:
 				db.execute("insert into svn_diffs(f_cp_id, diff) values(%s, %s)", cp_id, df_html)
@@ -148,20 +150,18 @@ def pull_log(svn_url, log_file_name):
 	ret = os.system(cmd)
 
 		
-log_file_name = "idi_log2.txt" 
-svn_url_old = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/analytics/branches/ts-decision-kernel-1-28"
-svn_url="http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/eventrouter/branches/ts-decision-kernel-1-28"
-
+log_file_name = "ts-decision-kernel-1-28_workflow.log" 
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
 
 def main():
 	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 	
-	#logging.info('Pull svn log...')
-	#pull_log(svn_url, log_file_name)
+	logging.info('Pull svn log...')
+	pull_log(svn_url, log_file_name)
 
-	#file = open(log_file_name)
-	file = open('ts-decision-kernel-1-28_svninfo.txt')
+	file = open(log_file_name)
+
 	assemble(file)
 	file.close()
 	logging.info('Finished...')

@@ -1,9 +1,9 @@
-drop table if exists `Stannis`.`search_history`;
-drop table if exists `Stannis`.`svn_diffs`;
-drop table if exists `Stannis`.`svn_change_path`;
-drop table if exists `Stannis`.`svn_log`;
+drop table if exists `stannis`.`search_history`;
+drop table if exists `stannis`.`svn_diffs`;
+drop table if exists `stannis`.`svn_change_path`;
+drop table if exists `stannis`.`svn_log`;
 
-CREATE  TABLE `Stannis`.`svn_log` (
+CREATE  TABLE `stannis`.`svn_log` (
 
   `id` INT NOT NULL AUTO_INCREMENT,
 
@@ -18,7 +18,7 @@ CREATE  TABLE `Stannis`.`svn_log` (
   PRIMARY KEY (`id`) );
   
   
-  CREATE  TABLE `Stannis`.`svn_change_path` (
+  CREATE  TABLE `stannis`.`svn_change_path` (
 
   `id` INT NOT NULL AUTO_INCREMENT ,
 
@@ -38,14 +38,14 @@ CREATE  TABLE `Stannis`.`svn_log` (
 
     FOREIGN KEY (`f_id` )
 
-    REFERENCES `Stannis`.`svn_log` (`id` )
+    REFERENCES `stannis`.`svn_log` (`id` )
 
     ON DELETE CASCADE
 
     ON UPDATE NO ACTION);
 
 
-CREATE  TABLE `Stannis`.`search_history` (
+CREATE  TABLE `stannis`.`search_history` (
 
   `id` INT NOT NULL AUTO_INCREMENT ,
 
@@ -60,7 +60,7 @@ CREATE  TABLE `Stannis`.`search_history` (
 COMMENT = 'user search history';
 
 
-CREATE  TABLE `Stannis`.`svn_diffs` (
+CREATE  TABLE `stannis`.`svn_diffs` (
 
   `id` INT NOT NULL AUTO_INCREMENT ,
 
@@ -76,7 +76,7 @@ CREATE  TABLE `Stannis`.`svn_diffs` (
 
     FOREIGN KEY (`f_cp_id` )
 
-    REFERENCES `Stannis`.`svn_change_path` (`id` )
+    REFERENCES `stannis`.`svn_change_path` (`id` )
 
     ON DELETE CASCADE
 
@@ -84,7 +84,7 @@ CREATE  TABLE `Stannis`.`svn_diffs` (
 
 COMMENT = 'tables store code diff html';
 
-CREATE  TABLE `Stannis`.`svn_module` (
+CREATE  TABLE `stannis`.`svn_module` (
 
   `id` INT NOT NULL AUTO_INCREMENT ,
 
@@ -98,13 +98,13 @@ CREATE  TABLE `Stannis`.`svn_module` (
 
 COMMENT = 'modules(branches)/submodules releationship';
 
-ALTER TABLE `Stannis`.`svn_log` ADD COLUMN `m_id` INT NULL  AFTER `comments` , 
+ALTER TABLE `stannis`.`svn_log` ADD COLUMN `m_id` INT NULL  AFTER `comments` , 
 
   ADD CONSTRAINT `m_id`
 
   FOREIGN KEY (`m_id` )
 
-  REFERENCES `Stannis`.`svn_module` (`id` )
+  REFERENCES `stannis`.`svn_module` (`id` )
 
   ON DELETE NO ACTION
 
@@ -112,7 +112,7 @@ ALTER TABLE `Stannis`.`svn_log` ADD COLUMN `m_id` INT NULL  AFTER `comments` ,
 
 , ADD INDEX `m_id` (`m_id` ASC) ;
 
-CREATE  TABLE `Stannis`.`svn_linked_change_path` (
+CREATE  TABLE `stannis`.`svn_linked_change_path` (
 
   `id` INT NOT NULL AUTO_INCREMENT ,
 
@@ -121,13 +121,13 @@ CREATE  TABLE `Stannis`.`svn_linked_change_path` (
   PRIMARY KEY (`id`) );
 
   
-ALTER TABLE `Stannis`.`svn_change_path` ADD COLUMN `f_link_cp_id` INT NULL  AFTER `f_id` , 
+ALTER TABLE `stannis`.`svn_change_path` ADD COLUMN `f_link_cp_id` INT NULL  AFTER `f_id` , 
 
   ADD CONSTRAINT `f_lcp_id`
 
   FOREIGN KEY (`f_link_cp_id` )
 
-  REFERENCES `Stannis`.`svn_linked_change_path` (`id` )
+  REFERENCES `stannis`.`svn_linked_change_path` (`id` )
 
   ON DELETE NO ACTION
 

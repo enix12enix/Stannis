@@ -8,7 +8,7 @@ from codediff import CodeDiffer
  
 split_line = "------------------------------------------------------------------------\n"
 
-temp_log = "templog"
+temp_log = "templog.log"
 temp_diff = "temp_diff.html"
 
 
@@ -155,15 +155,19 @@ class GenDiffer:
 		logging.info('make diff ...')
 		delete_file_if_exists(temp_diff)
 		try: 
-			differ = CodeDiffer(old_code_path, new_code_path, temp_diff)
+			differ = CodeDiffer(old_code_path, new_code_path, temp_diff, None, 0, 0, 3, 'title test', 'comments test')
 			differ.make_diff()
 		except CodeDifferError, e:
 			logging.error('CodeDiffer error: %s', e)
 			
 		logging.info('filter diff html ...')
+
 		diff = open(temp_diff)
-		diff_html = filter_html(diff)
+		df_html=''
+		for l in diff:
+			df_html += l
 		diff.close()
-		
+	
+
 		logging.info('filter html done...')
-		return diff_html
+		return df_html

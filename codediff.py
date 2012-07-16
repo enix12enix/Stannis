@@ -73,7 +73,7 @@ def make_title(pathname, width):
 
 
 def get_lines(file):
-    '''Return content of file (a list, each is a line)'''
+    '''Return content of file (a list, each is a lfdfine)'''
     fp = open(file, 'r')
     lines = fp.readlines()
     fp.close()
@@ -458,7 +458,7 @@ class CodeDiffer:
         from_title = make_title(self.__obj1, self.__wrap_num)
         to_title = make_title(self.__obj2, self.__wrap_num)
         use_context = self.__context_line != 0
-        html = sdiff_lines(from_lines, to_lines, from_title, to_title,
+        html = udiff_lines(from_lines, to_lines, from_title, to_title,
                            use_context, self.__wrap_num, self.__context_line)
         write_file(self.__output, html)
 
