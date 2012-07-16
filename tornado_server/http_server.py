@@ -182,15 +182,24 @@ class DiffHandler(tornado.web.RequestHandler):
 		if di_result == None:
 			raise tornado.web.HTTPError(500, "diff record not found!")
 		
-		print cp_result['path']
+		# print cp_result['path']
 		title = cp_result['path'].split('/')[-1]
-		print title
+		# print title
 		self.render("diff.html", title=title, diff=di_result['diff'])
 	
 class EntryModule(tornado.web.UIModule):
     def render(self, entry):
         return self.render_string("modules/entry.html", entry=entry)
 		
+
+
+class GetFullDiff(tornado.web.RequestHandler):
+	
+	def __init__(self, arg):
+		super(GetFullDiff, self).__init__()
+		self.arg = arg
+		
+
 
 if __name__ == "__main__":
 	tornado.options.parse_command_line()
