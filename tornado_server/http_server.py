@@ -193,14 +193,22 @@ class EntryModule(tornado.web.UIModule):
 		
 
 
-class GetFullDiff(tornado.web.RequestHandler):
-	
-	def __init__(self, arg):
-		super(GetFullDiff, self).__init__()
-		self.arg = arg
-		
+class GetFullDiffHandler(tornado.web.RequestHandler):
+
+	def get(self):
+		svn_url_prefix = self.get_argument("pre", None)
+		path = self.get_argument("fp", None)
+		version = self.get_argument("ver", None)
 
 
+		df = GenDiffer(svn_url_prefix , path, version, 'f')
+		df_html = df.gen_differ()
+		if df_html == None:	
+			raise tornado.web.HTTPError(500, "could not get code diff...")			
+		else:
+			self.write(df_html)
+
+			
 if __name__ == "__main__":
 	tornado.options.parse_command_line()
 	http_server = tornado.httpserver.HTTPServer(Application())
