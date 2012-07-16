@@ -25,3 +25,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+
+# test script
+test*.py
+
+# temp file
+temp*
