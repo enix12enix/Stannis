@@ -100,7 +100,7 @@ def get_filename(path):
 		i = i - 1
 	return None
 		
-	
+
 def find_split_line(lines):
 	i = 3
 	for line in lines[3:]:
@@ -115,7 +115,7 @@ def gen_diff(action, path, version, cp_id):
 	if action == "A":
 		if path[-1] <> "/":
 			logging.info('code path: %s', path)
-			df = GenDiffer(svn_url_prefix + path, version)
+			df = GenDiffer(svn_url_prefix, path, version)
 			code = df.get_code()
 
 			db.execute("insert into svn_diffs(f_cp_id, diff) values(%s, %s)", cp_id, code)

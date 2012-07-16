@@ -7,8 +7,7 @@ import subprocess
 from codediff import CodeDiffer
  
 split_line = "------------------------------------------------------------------------\n"
-old_file = "old"
-new_file = "new"
+
 temp_log = "templog"
 temp_diff = "temp_diff.html"
 
@@ -53,14 +52,39 @@ def get_previous_version(version, list):
 			
 	return None # not found
 	
-def get_file_by_version(version, file_url, output):
-	delete_file_if_exists(output)
-	
-	# svn cat -r version svn_url > file_name
-	co_cmd = "svn cat -r " + version + " " + file_url + " >> " + output
-	logging.info('execute cmd: %s', co_cmd)
-	
-	ret = os.system(co_cmd)	
+def get_file_by_version(svn_url_prefix, path, version):
+	i = -1
+	while -i < len(path):
+		if path[i] == '/' and path[i:].find('.') <> -1:
+			dir_path = create_dir(path[:i+1] + version)
+						
+			filename =path[i+1:] 
+			print "filename = " + filename
+
+			local_path = dir_path + "/" + filename
+			if os.path.isfile(local_path):
+				print "file existed..."
+				return local_path
+
+			# checkout specfic version: svn cat -r version svn_url > file_name
+			co_cmd = "svn cat -r " + version + " " + svn_url_prefix + path + " >> " + local_path
+			print "execute cmd: " + co_cmd
+			ret = os.system(co_cmd)	
+			return local_path
+
+		i = i - 1
+	return None
+
+def create_dir(dir_path):
+	if dir_path[0] == "/":
+		dir_path = dir_path[1:]
+	if os.path.isdir(dir_path):
+		print "existing dir..."
+	else:
+		ret = os.makedirs(dir_path)
+		print "create dir: " + dir_path
+	return dir_path
+
 
 def filter_html(diff_file):
 	start_tag = "<table"
@@ -82,13 +106,18 @@ def filter_html(diff_file):
 	
 	
 class GenDiffer:
-	def __init__(self, file_svn_url, version):
-			self.file_svn_url = file_svn_url
+	def __init__(self, svn_url_prefix, svn_file_url, version):
+			self.svn_url_prefix = svn_url_prefix
+			self.svn_file_url = svn_file_url
 			self.version = version
-
+			self.file_svn_url = svn_url_prefix + svn_file_url
+			
+	# TODO version param ?
 	def get_code(self):
-		get_file_by_version(self.version, self.file_svn_url, new_file)
-		file = open(new_file)
+		code_path = get_file_by_version(self.svn_url_prefix, self.svn_file_url, self.version)
+
+		# assume not None 
+		file = open(code_path)
 		str=''
 		for l in file:
 			str += l
@@ -120,13 +149,13 @@ class GenDiffer:
 		
 		logging.info('find previous version: %s', pre_version)
 		
-		get_file_by_version(self.version, self.file_svn_url, new_file)
-		get_file_by_version(pre_version, self.file_svn_url, old_file)
+		new_code_path = get_file_by_version(self.svn_url_prefix, self.svn_file_url, self.version)
+		old_code_path = get_file_by_version(self.svn_url_prefix, self.svn_file_url, pre_version)
 
 		logging.info('make diff ...')
 		delete_file_if_exists(temp_diff)
 		try: 
-			differ = CodeDiffer(old_file, new_file, temp_diff)
+			differ = CodeDiffer(old_code_path, new_code_path, temp_diff)
 			differ.make_diff()
 		except CodeDifferError, e:
 			logging.error('CodeDiffer error: %s', e)
