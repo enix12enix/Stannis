@@ -6,8 +6,11 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.database
+import tornado.gen
+import tornado.httpclient
 
 from tornado.options import define, options
+ 
 
 define("port", default=8000, help="run on the given port", type=int)
 define("mysql_host", default="127.0.0.1:3306", help="database host")
@@ -25,7 +28,8 @@ class Application(tornado.web.Application):
             (r"/", IndexHandler),
 			(r"/search", SearchHandler),
 			(r"/diff", DiffHandler),
-			(r"/timeline", TimelineHandler)
+			(r"/timeline", TimelineHandler),
+			(r"/fulldiff", GetFullDiffHandler)
         ]
         settings = dict(
             app_title=u"Tornado Search",
@@ -195,20 +199,22 @@ class EntryModule(tornado.web.UIModule):
 
 class GetFullDiffHandler(tornado.web.RequestHandler):
 
+	@tornado.web.asynchronous
 	def get(self):
-		svn_url_prefix = self.get_argument("pre", None)
+		#svn_url_prefix = self.get_argument("pre", "http://svn.sc4.paypal.com/svn/projects")
 		path = self.get_argument("fp", None)
 		version = self.get_argument("ver", None)
 
+		print "---------------"
+		print path
+		print version
 
-		df = GenDiffer(svn_url_prefix , path, version, 'f')
-		df_html = df.gen_differ()
-		if df_html == None:	
-			raise tornado.web.HTTPError(500, "could not get code diff...")			
-		else:
-			self.write(df_html)
+		http_client = tornado.httpclient.AsyncHTTPClient()
+		response = yield tornado.gen.Task(http_client.fetch, "http://localhost:8001/genfdiff?fp="+path+"&ver="+version)
+		self.write(response)
+        #self.render("template.html")
 
-			
+
 if __name__ == "__main__":
 	tornado.options.parse_command_line()
 	http_server = tornado.httpserver.HTTPServer(Application())
