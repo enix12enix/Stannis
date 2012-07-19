@@ -20,7 +20,8 @@ db = tornado.database.Connection("localhost:3306", "stannis", "root", "mysql")
 
 #svn_url = "http://v8.googlecode.com/svn/trunk/sc/"
 
-def assemble(log_file):
+def assemble(file_name):
+	log_file = open(file_name)
 	checkin = []
 	for line in log_file:
 		if line == split_line:
@@ -31,6 +32,7 @@ def assemble(log_file):
 		else:
 			checkin.append(line)
 
+	log_file.close()
 
 def insert_record(record):	
 	sp_line = find_split_line(record)
@@ -148,15 +150,9 @@ def delete_file_if_exists(file):
 		
 def pull_log(svn_url, log_file_name):
 	delete_file_if_exists(log_file_name)
-	cmd = "svn -v log " + svn_url + " -l 100 >> " + log_file_name
+	cmd = "svn -v log " + svn_url + " -l 70 >> " + log_file_name
 	ret = os.system(cmd)
 
-def pull(file_name):
-	delete_file_if_exists(file_name)
-	cmd = "svn -v log " + svn_url + " -l 100 >> " + file_name
-	ret = os.system(cmd)
-
-	
 def get_last_changed_version(svn_url, file_name):
 	delete_file_if_exists(file_name)
 	cmd = "svn info " + svn_url + " >> " + file_name
@@ -192,9 +188,8 @@ def check_action(svn_url):
 		logging.info("svn pull cmd: " + cmd)
 		ret = os.system(cmd)
 
-		f = open(log_file_name)
-		assemble(f)
-		f.close()
+		assemble(log_file_name)
+
 
 log_file_name = "ts-decision-kernel-1-28_workflow.log" 
 svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
@@ -203,15 +198,20 @@ def schdule():
 	threading.Timer(60, schdule).start()
 	check_action(svn_url)
 
+def fresh_pull():
+	# invoke pull log at first time
+	logging.info('Pull svn log...')
+	pull_log(svn_url, log_file_name)
+
+	assemble(log_file_name)
 
 def main():
 	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
-	# invoke pull log at first time
-	#logging.info('Pull svn log...')
-	#pull_log(svn_url, log_file_name)
 
-	schdule()
+	fresh_pull()
+
+	#schdule()
 	logging.info('Finished...')
 
 if __name__ == '__main__':
