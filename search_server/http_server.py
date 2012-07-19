@@ -59,7 +59,7 @@ class IndexHandler(tornado.web.RequestHandler):
 		self.render('index.html')
 		
 		
-
+# ?
 class Log(object):
 	entries = []	
 
@@ -67,36 +67,40 @@ class Log(object):
 def search(*args):
 	pass
 
+# TODO async
+def track(req, content):
+	self.db.execute("insert into search_history(ip, content) values(%s, %s)", req.remote_ip, content)
 
-		
+
+
+
 class SearchHandler(tornado.web.RequestHandler):
 	@property
 	def db(self):
 		return self.application.db
+	
+	def on_finish(self):
+		print 'on_finish ...'
 
-	# TODO 
-	def track(self, ip, acct_name):
-		id = self.db.get("select id from search_history where ip=%s and acct_name=%s", ip, acct_name)
-		if id:
-			self.db.execute("update search_history set ")
-		self.db.execute("insert into search_history(ip, content) values(%s, %s)", ip, acct_name)
-		
 	def get(self):
 		input = self.get_argument("input", None)
 		if input == None:
 			self.redirect('/timeline')
 			#raise tornado.web.HTTPError(500, "Please input user account name !")
 		elif input.find('.') != -1:
-			pass # file type
+			# TODO
+			# file type
+			self.write("TO BE IMPLMENTED...")
 		elif input.find('@') != -1:
-			pass # email address
+			# TODO
+			# email address
+			self.write("TO BE IMPLMENTED...")
 		else:
 			self.search_acct_name(input)
 		
 
 	def search_acct_name(self, acct_name):
 		offset = int(self.get_argument("offset", 1))
-
 			
 		# tracking
 		self.db.execute("insert into search_history(ip, content) values(%s, %s)", self.request.remote_ip, acct_name)
@@ -196,7 +200,7 @@ class EntryModule(tornado.web.UIModule):
         return self.render_string("modules/entry.html", entry=entry)
 		
 
-
+# TODO
 class GetFullDiffHandler(tornado.web.RequestHandler):
 
 	@tornado.web.asynchronous
