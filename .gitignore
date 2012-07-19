@@ -12,6 +12,7 @@ var
 sdist
 develop-eggs
 .installed.cfg
+src
 
 # Installer logs
 pip-log.txt
@@ -32,3 +33,6 @@ test*.py
 
 # temp file
 temp*
+
+# log file
+*.log
