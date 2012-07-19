@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block body %}
+	<div id="header">
+		<a href="/" style="text-decoration: none"><h1>Tornado Search</h1></a>
+	</div>
+	<div id="content">
+		<form class="well form-search" method="get" action="/search">
+			<div class="controls">
+			<input class="span3" type="text" name="input" placeholder="svn account">
+			</p>
+			<!-- <div class="controller"> -->
+				<select id="branch" class="span3">
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+				</select>
+			</div>	
+			</p>
+			<button class="btn" label="search" type="submit">
+				<span>Search</span>
+			</button>
+		</form>
+	</div>	
+{% end %}
+
+
