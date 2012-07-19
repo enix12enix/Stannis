@@ -11,9 +11,10 @@
 			</p>
 			<!-- <div class="controller"> -->
 				<select id="branch" class="span3">
-					<option>1</option>
-					<option>2</option>
-					<option>3</option>
+					{% for b in branchs %}
+						<option>{{b}}</option>
+					{% end %}
+		
 				</select>
 			</div>	
 			</p>

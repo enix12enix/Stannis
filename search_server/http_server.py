@@ -45,18 +45,21 @@ class Application(tornado.web.Application):
         self.db = tornado.database.Connection(
             host=options.mysql_host, database=options.mysql_database,
             user=options.mysql_user, password=options.mysql_password)
-
-		
-			
+        
 class IndexHandler(tornado.web.RequestHandler):		
 	@property
 	def db(self):
 		return self.application.db
-
+		
 	def get(self):
-		# result = self.db.get("select count(*) as count from search_history")
-		# , search_count=result['count']
-		self.render('index.html')
+		
+		# load module from db
+		result_amount = self.db.query("select name from svn_module where r_id is NULL")
+		branchs =[]
+		for r in result_amount:
+			branchs.append(r['name'])
+
+		self.render('index.html', branchs=branchs)
 		
 		
 # ?
