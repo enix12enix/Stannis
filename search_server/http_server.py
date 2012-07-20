@@ -51,15 +51,21 @@ class IndexHandler(tornado.web.RequestHandler):
 	def db(self):
 		return self.application.db
 		
-	def get(self):
-		
+	def get(self):	
 		# load module from db
-		result_amount = self.db.query("select name from svn_module where r_id is NULL")
-		branchs =[]
-		for r in result_amount:
-			branchs.append(r['name'])
+		# level 4
+		l4_result = self.db.query("select name from svn_module where level = 4")
+		l4 = []
+		for r in l4_result:
+			l4.append(r['name'])
 
-		self.render('index.html', branchs=branchs)
+		# branch level = 5
+		l5_result = self.db.query("select name from svn_module where level = 5")
+		l5 = []
+		for r in l5_result:
+			l5.append(r['name'])
+
+		self.render('index.html', branchs=l5, l4=l4)
 		
 		
 # ?
@@ -86,9 +92,15 @@ class SearchHandler(tornado.web.RequestHandler):
 		print 'on_finish ...'
 
 	def get(self):
+		l5 = self.get_argument("l5", None)
+		print 'SearchHandler---------------'
+		print l5
+		l4 = self.get_argument("l4", None)
+		print l4
+
 		input = self.get_argument("input", None)
 		if input == None:
-			self.redirect('/timeline')
+			self.redirect('/timeline?l4=' + l4 + "l5=" + l5)
 			#raise tornado.web.HTTPError(500, "Please input user account name !")
 		elif input.find('.') != -1:
 			# TODO
@@ -142,8 +154,10 @@ class TimelineHandler(tornado.web.RequestHandler):
 	def get(self):
 		offset = int(self.get_argument("offset", 1))
 		start_index = int(self.get_argument("start", 1))
-		
-		result_amount = self.db.get("select count(*) as count from svn_log")
+		branch = self.get_argument("b", None)
+
+		result_amount = self.db.get("select count(*) as count from svn_log where m_id=(select id from svn_module where name=%s)",\
+					branch)
 		page_size = result_amount['count']/PAGE_ITEM
 		if result_amount['count'] % PAGE_ITEM != 0:
 			page_size = page_size +1
@@ -157,9 +171,9 @@ class TimelineHandler(tornado.web.RequestHandler):
 		else:
 			end_index = page_size
 		
-
-		check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", \
-				(offset -1)*PAGE_ITEM)
+		"select id from svn_module where name = %s"	
+		check_in_entries = self.db.query("select * from svn_log where m_id=(select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10", \
+				branch, (offset -1)*PAGE_ITEM)
 	
 		change_path_set = []
 

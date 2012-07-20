@@ -7,16 +7,26 @@
 	<div id="content">
 		<form class="well form-search" method="get" action="/search">
 			<div class="controls">
-			<input class="span3" type="text" name="input" placeholder="svn account">
+              <select class="span3" multiple="multiple" name="l4" id="multiSelect">
+              	{% for i in l4 %}
+                <option>{{i}}</option>
+              	{% end %}
+              </select>
+            </div>
 			</p>
-			<!-- <div class="controller"> -->
-				<select id="branch" class="span3">
+
+            <div class="controls">
+				<select id="branch" name="l5" class="span3">
 					{% for b in branchs %}
 						<option>{{b}}</option>
-					{% end %}
-		
+					{% end %}		
 				</select>
-			</div>	
+			</div>
+        	</p>
+
+			<input class="span3" type="text" name="input" placeholder="svn account">
+			
+		
 			</p>
 			<button class="btn" label="search" type="submit">
 				<span>Search</span>
