@@ -11,8 +11,8 @@ from gen_diff import GenDiffer
 
 
 
-svn_url_prefix = "http://svn.sc4.paypal.com/svn/projects"
-#svn_url_prefix = "http://v8.googlecode.com/svn"
+#svn_url_prefix = "http://svn.sc4.paypal.com/svn/projects"
+svn_url_prefix = "http://v8.googlecode.com/svn"
 split_line = "------------------------------------------------------------------------\n"
 
 # TODO set in conf file
@@ -148,10 +148,14 @@ def delete_file_if_exists(file):
 		os.remove(file)
 		logging.info('delete file: %s', file)
 		
-def pull_log(svn_url, log_file_name):
+def pull_log(svn_url):
+	url_dict = svn_url.split('/')
+	log_file_name = url_dict[2] + "_" + url_dict[-1] + ".log"
 	delete_file_if_exists(log_file_name)
 	cmd = "svn -v log " + svn_url + " -l 70 >> " + log_file_name
+	logging.info('pull cmd: %s', cmd)
 	ret = os.system(cmd)
+	return log_file_name
 
 def get_last_changed_version(svn_url, file_name):
 	delete_file_if_exists(file_name)
@@ -185,14 +189,15 @@ def check_action(svn_url):
 		log_file_name = "svn_history.log"
 		delete_file_if_exists(log_file_name)
 		cmd = "svn -v log " + svn_url + " -r " + str(current_max+1) + ":" + svn_max + " >> " + log_file_name
-		logging.info("svn pull cmd: " + cmd)
+		logging.info("svn pull cmd: %s", cmd)
 		ret = os.system(cmd)
 
 		assemble(log_file_name)
 
 
-log_file_name = "ts-decision-kernel-1-28_workflow.log" 
-svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
+#svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
+svn_url = "http://v8.googlecode.com/svn/trunk"
+
 
 def schdule():
 	threading.Timer(60, schdule).start()
@@ -201,7 +206,8 @@ def schdule():
 def fresh_pull():
 	# invoke pull log at first time
 	logging.info('Pull svn log...')
-	pull_log(svn_url, log_file_name)
+
+	log_file_name = pull_log(svn_url)
 
 	assemble(log_file_name)
 
