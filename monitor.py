@@ -92,7 +92,7 @@ def insert_record(record):
 						svn_cp_id = db.execute("insert into svn_change_path(action, path, filename, f_id, f_link_cp_id) values(%s, %s, %s, %s, %s)", \
 							change_path[0], change_path[1], filename, svn_log_id, lcp_id)
 					# gen diff for file path
-					gen_diff(change_path[0], change_path[1], version, svn_cp_id)
+					gen_diff(change_path[0], change_path[1], version, svn_cp_id, filename)
 	
 
 def add_linked_change_path(path):
@@ -118,7 +118,11 @@ def find_split_line(lines):
 
 
 	
-def gen_diff(action, path, version, cp_id):
+def gen_diff(action, path, version, cp_id, filename):
+	# filter pom.xml
+	if filename == 'pom.xml':
+		return
+
 	if action == "A":
 		if path[-1] <> "/":
 			logging.info('code path: %s', path)
@@ -195,7 +199,7 @@ def check_action(svn_url):
 		assemble(log_file_name)
 
 
-svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/idi-DecisionEngine-1-21"
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
 #svn_url = "http://v8.googlecode.com/svn/trunk"
 
 
@@ -215,7 +219,7 @@ def main():
 	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 
-	fresh_pull("30")
+	fresh_pull("100")
 
 	#schdule()
 	logging.info('Finished...')
