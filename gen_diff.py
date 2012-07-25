@@ -71,6 +71,11 @@ def get_file_by_version(svn_url_prefix, path, version):
 			co_cmd = "svn cat -r " + version + " " + svn_url_prefix + path + " >> " + local_path
 			logging.debug("execute cmd: " + co_cmd)
 			ret = os.system(co_cmd)	
+
+			# check ?
+			if os.path.isfile(local_path) == False:
+				logging.error("svn check out file failed: " + local_path)
+
 			return local_path
 
 		i = i - 1
