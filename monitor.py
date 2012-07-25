@@ -11,8 +11,8 @@ from gen_diff import GenDiffer
 
 
 
-#svn_url_prefix = "http://svn.sc4.paypal.com/svn/projects"
-svn_url_prefix = "http://v8.googlecode.com/svn"
+svn_url_prefix = "http://svn.sc4.paypal.com/svn/projects"
+#svn_url_prefix = "http://v8.googlecode.com/svn"
 split_line = "------------------------------------------------------------------------\n"
 
 # TODO set in conf file
@@ -148,11 +148,11 @@ def delete_file_if_exists(file):
 		os.remove(file)
 		logging.info('delete file: %s', file)
 		
-def pull_log(svn_url):
+def pull_log(svn_url, depth):
 	url_dict = svn_url.split('/')
 	log_file_name = url_dict[2] + "_" + url_dict[-1] + ".log"
 	delete_file_if_exists(log_file_name)
-	cmd = "svn -v log " + svn_url + " -l 70 >> " + log_file_name
+	cmd = "svn -v log " + svn_url + " -l " + depth + " >> " + log_file_name
 	logging.info('pull cmd: %s', cmd)
 	ret = os.system(cmd)
 	return log_file_name
@@ -195,19 +195,19 @@ def check_action(svn_url):
 		assemble(log_file_name)
 
 
-#svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
-svn_url = "http://v8.googlecode.com/svn/trunk"
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/idi-DecisionEngine-1-21"
+#svn_url = "http://v8.googlecode.com/svn/trunk"
 
 
 def schdule():
 	threading.Timer(60, schdule).start()
 	check_action(svn_url)
 
-def fresh_pull():
+def fresh_pull(depth):
 	# invoke pull log at first time
 	logging.info('Pull svn log...')
 
-	log_file_name = pull_log(svn_url)
+	log_file_name = pull_log(svn_url, depth)
 
 	assemble(log_file_name)
 
@@ -215,7 +215,7 @@ def main():
 	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 
-	fresh_pull()
+	fresh_pull("30")
 
 	#schdule()
 	logging.info('Finished...')
