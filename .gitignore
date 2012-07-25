@@ -36,3 +36,7 @@ temp*.html
 
 # log file
 *.log
+
+
+# sublime config
+*.sublime-*

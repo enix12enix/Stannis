@@ -5,7 +5,8 @@ import logging
 import subprocess
 
 from codediff import CodeDiffer
- 
+from codediff import CodeDifferError
+
 split_line = "------------------------------------------------------------------------\n"
 
 temp_log = "templog.log"
@@ -75,9 +76,12 @@ def get_file_by_version(svn_url_prefix, path, version):
 		i = i - 1
 	return None
 
-def create_dir(dir_path):
+def create_dir(dir_path):	
 	if dir_path[0] == "/":
 		dir_path = dir_path[1:]
+
+	dir_path = "src_server/src/" + dir_path
+		
 	if os.path.isdir(dir_path):
 		logging.debug("existing dir..." + dir_path) 
 	else:
@@ -161,7 +165,8 @@ class GenDiffer:
 			differ.make_diff()
 		except CodeDifferError, e:
 			logging.error('CodeDiffer error: %s', e)
-			
+			return None
+
 		logging.info('filter diff html ...')
 
 		diff = open(temp_diff)
