@@ -19,7 +19,7 @@ define("mysql_user", default="root", help="database user")
 define("mysql_password", default="mysql", help="database password")
 
 define("page_size", default="10", help="result set page size")
-PAGE_ITEM=10
+PAGE_ITEM = 10
 
 
 class Application(tornado.web.Application):
@@ -53,19 +53,14 @@ class IndexHandler(tornado.web.RequestHandler):
 		
 	def get(self):	
 		# load module from db
+		# TODO, save in session
 		# level 4
-		l4_result = self.db.query("select name from svn_module where level = 4")
-		l4 = []
-		for r in l4_result:
-			l4.append(r['name'])
+		l4_result = self.db.query("select id, name from svn_module where level = 4 and active = 1")
 
 		# branch level = 5
-		l5_result = self.db.query("select name from svn_module where level = 5")
-		l5 = []
-		for r in l5_result:
-			l5.append(r['name'])
+		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
 
-		self.render('index.html', branchs=l5, l4=l4)
+		self.render('index.html', l5=l5_result, l4=l4_result)
 		
 		
 # ?
@@ -92,15 +87,21 @@ class SearchHandler(tornado.web.RequestHandler):
 		print 'on_finish ...'
 
 	def get(self):
-		l5 = self.get_argument("l5", None)
-		print 'SearchHandler---------------'
-		print l5
+		param =''
 		l4 = self.get_argument("l4", None)
-		print l4
+
+		if l4 != None:
+			param += 'l4r=' +l4
+		l5 = self.get_argument("l5", None)
+		if l5 != None:
+			if param != '':
+				param +=  '&l5r=' + l5
+			else:
+				param += 'l5r=' + l5
 
 		input = self.get_argument("input", None)
 		if input == None:
-			self.redirect('/timeline?l4=' + l4 + "l5=" + l5)
+			self.redirect('/timeline?' + param)
 			#raise tornado.web.HTTPError(500, "Please input user account name !")
 		elif input.find('.') != -1:
 			# TODO
@@ -120,9 +121,9 @@ class SearchHandler(tornado.web.RequestHandler):
 		# tracking
 		self.db.execute("insert into search_history(ip, content) values(%s, %s)", self.request.remote_ip, acct_name)
 		
-		result_amount = self.db.get("select count(*) as count from svn_log where acct_name=%s", acct_name)
-		page_size = result_amount['count']/PAGE_ITEM
-		if result_amount['count'] % PAGE_ITEM != 0:
+		result_size = self.db.get("select count(*) as count from svn_log where acct_name=%s", acct_name)
+		page_size = result_size['count']/PAGE_ITEM
+		if result_size['count'] % PAGE_ITEM != 0:
 			page_size = page_size +1
 		
 		check_in_entries = self.db.query("select * from svn_log where acct_name=%s ORDER BY date_time DESC LIMIT %s, 10", \
@@ -143,7 +144,7 @@ class SearchHandler(tornado.web.RequestHandler):
 		if len(check_in_entries) != 0:
 			msg = "No records found!"
 		
-		self.render("search.html", acct_name=acct_name, result_amount=result_amount['count'], page_size=page_size, \
+		self.render("search.html", acct_name=acct_name, result_size=result_size['count'], page_size=page_size, \
 				actived_page=offset, entries=check_in_entries, change_path_set=change_path_set)
 
 class TimelineHandler(tornado.web.RequestHandler):
@@ -154,14 +155,22 @@ class TimelineHandler(tornado.web.RequestHandler):
 	def get(self):
 		offset = int(self.get_argument("offset", 1))
 		start_index = int(self.get_argument("start", 1))
-		branch = self.get_argument("b", None)
+		level5 = self.get_argument("l5r", None)
+		level4 = self.get_argument("l4r", None)
+		rs = self.get_argument("rs", None)
 
-		result_amount = self.db.get("select count(*) as count from svn_log where m_id=(select id from svn_module where name=%s)",\
-					branch)
-		page_size = result_amount['count']/PAGE_ITEM
-		if result_amount['count'] % PAGE_ITEM != 0:
+		if rs == None:
+		 	sql = "select count(*) as count from svn_log where m_id in (select id from svn_module where r_id=%s and name=%s)"
+			result = self.db.get(sql, level4, level5)
+			result_size = int(result['count'])
+			print result['count']
+		else: 
+			result_size = int(rs)
+
+
+		page_size = result_size/PAGE_ITEM
+		if result_size % PAGE_ITEM != 0:
 			page_size = page_size +1
-
 
 		if offset -5 >= 1:
 			start_index = offset - 5 
@@ -171,10 +180,9 @@ class TimelineHandler(tornado.web.RequestHandler):
 		else:
 			end_index = page_size
 		
-		"select id from svn_module where name = %s"	
-		check_in_entries = self.db.query("select * from svn_log where m_id=(select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10", \
-				branch, (offset -1)*PAGE_ITEM)
-	
+		sql = "select * from svn_log where m_id in (select id from svn_module where r_id=%s and name =%s) ORDER BY date_time DESC LIMIT %s, 10"
+		check_in_entries = self.db.query(sql, level4, level5, (offset -1)*PAGE_ITEM)
+
 		change_path_set = []
 
 		for entry in check_in_entries:			
@@ -185,10 +193,18 @@ class TimelineHandler(tornado.web.RequestHandler):
 			if len(change_path_entries) != 0:
 				change_path_set.append(change_path_entries)
 
+				# level 4
+		l4_result = self.db.query("select id, name from svn_module where level = 4 and active = 1")
 
+		# branch level = 5
+		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
 
-		self.render("timeline.html", result_amount=result_amount['count'], start_index=start_index, end_index=end_index, \
-			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set)
+		print start_index
+		print end_index
+		print level4
+		print level5
+		self.render("timeline.html", result_size=result_size, start_index=start_index, end_index=end_index, \
+			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l4r=l4_result, l5r=l5_result, l4=level4, l5=level5)
 
 
 class DiffHandler(tornado.web.RequestHandler):
