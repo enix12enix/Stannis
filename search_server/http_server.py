@@ -14,7 +14,7 @@ from tornado.options import define, options
 
 define("port", default=8000, help="run on the given port", type=int)
 define("mysql_host", default="127.0.0.1:3306", help="database host")
-define("mysql_database", default="Stannis", help="database name")
+define("mysql_database", default="stannis", help="database name")
 define("mysql_user", default="root", help="database user")
 define("mysql_password", default="mysql", help="database password")
 
@@ -199,10 +199,6 @@ class TimelineHandler(tornado.web.RequestHandler):
 		# branch level = 5
 		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
 
-		print start_index
-		print end_index
-		print level4
-		print level5
 		self.render("timeline.html", result_size=result_size, start_index=start_index, end_index=end_index, \
 			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l4r=l4_result, l5r=l5_result, l4=level4, l5=level5)
 
