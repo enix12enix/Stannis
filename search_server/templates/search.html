@@ -8,7 +8,7 @@
 
 
 	
-  <div class="page-header" align="left"> <h6>{{ result_amount }} results </h6></div>
+  <div class="page-header" align="left"> <h6>{{ result_size }} results </h6></div>
 	
   <div align="left">
   {% set  i=0 %}
@@ -42,7 +42,7 @@
   
    <div class="pagination" align="center">
         <ul>
-		  {% if result_amount > 10 %}
+		  {% if result_size > 10 %}
 			  {% if actived_page <> 1%}
 				<li><a href="/search?acct_name={{acct_name}}&offset={{actived_page-1}}">&laquo;</a></li>   
 			  {% end %}
@@ -61,7 +61,4 @@
 		  {% end %}
         </ul>
     </div>
-	
-	<script src="{{ static_url( "js/jquery.js" )}}"></script>
-	<script src="{{ static_url( "js/bootstrap-collapse.js" )}}"></script>
 {% end %}
