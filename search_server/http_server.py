@@ -175,18 +175,34 @@ class TimelineHandler(tornado.web.RequestHandler):
 			page_size = page_size +1
 
 		if offset -5 >= 1:
-			start_index = offset - 5 
-
+			start_index = offset - 5
+ 
 		if 	start_index + 10 < page_size:
 			end_index = start_index + 10
 		else:
 			end_index = page_size
 		
+		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
+
+
 		if level5 == None:
 			check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", (offset -1)*PAGE_ITEM)
+
+			l5_result_ordered = ['']	
+			for i in l5_result:
+				l5_result_ordered.append(i['name'])
+			
 		else:
 			sql = "select * from svn_log where m_id in (select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10"
 			check_in_entries = self.db.query(sql, level5, (offset -1)*PAGE_ITEM)
+
+			l5_result_ordered = [level5]
+			for i in l5_result:
+				if i['name'] != level5:
+					l5_result_ordered.append(i['name'])
+					l5_result_ordered.append
+			l5_result_ordered.append('')
+
 
 		change_path_set = []
 
@@ -202,10 +218,9 @@ class TimelineHandler(tornado.web.RequestHandler):
 		#l4_result = self.db.query("select id, name from svn_module where level = 4 and active = 1")
 
 		# branch level = 5
-		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
 
 		self.render("timeline.html", result_size=result_size, start_index=start_index, end_index=end_index, \
-			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l5r=l5_result, l5=level5)
+			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l5r=l5_result_ordered, l5=level5)
 
 
 class DiffHandler(tornado.web.RequestHandler):
