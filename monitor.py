@@ -20,7 +20,7 @@ db = tornado.database.Connection("localhost:3306", "stannis", "root", "mysql")
 
 #svn_url = "http://v8.googlecode.com/svn/trunk/sc/"
 
-def assemble(file_name):
+def assemble(file_name, m_id):
 	logging.debug('assemble method...')
 
 	log_file = open(file_name)
@@ -28,14 +28,14 @@ def assemble(file_name):
 	for line in log_file:
 		if line == split_line:			
 			if len(checkin) <> 0:
-				insert_record(checkin)			
+				insert_record(checkin, m_id)			
 			checkin = []
 		else:
 			checkin.append(line)
 
 	log_file.close()
 
-def insert_record(record):	
+def insert_record(record, m_id):	
 	sp_line = find_split_line(record)
 	
 	# change path
@@ -61,8 +61,8 @@ def insert_record(record):
 		str_dt =  result[2].strip() # date time
 		date_time = datetime.strptime(str_dt[:19], "%Y-%m-%d %H:%M:%S")
 		# get record id from db
-		svn_log_id = db.execute("insert into svn_log(version, acct_name, date_time, comments) values(%s, %s, %s, %s)",\
-			 version, acct_name, date_time, comments)
+		svn_log_id = db.execute("insert into svn_log(version, acct_name, date_time, comments, m_id) values(%s, %s, %s, %s, %s)",\
+			 version, acct_name, date_time, comments, m_id)
 		
 		logging.debug('svn_log_id: %s', svn_log_id)
 		
@@ -163,7 +163,8 @@ def delete_file_if_exists(file):
 	if os.path.isfile(file):
 		os.remove(file)
 		logging.info('delete file: %s', file)
-		
+	
+
 def pull_log(svn_url, depth):
 	url_dict = svn_url.split('/')
 	if svn_url[-1] == '/':
@@ -213,10 +214,30 @@ def check_action(svn_url):
 		logging.info("svn pull cmd: %s", cmd)
 		ret = os.system(cmd)
 
-		assemble(log_file_name)
+		m_id = get_module(svn_url)
+		assemble(log_file_name, m_id)
+
+def get_module(url):
+	# default module name
+	url_dict = url.split('/')
+	if url[-1] == '/':
+		module_name = url_dict[-2] 
+	else:		
+		module_name = url_dict[-1]
+
+	logging.debug("module_name: %s", module_name)
+
+	result = db.get("select id from svn_module where name=%s and path=%s", module_name, url)
+
+	if result == None:
+		logging.debug("Add a new module '%s' to db", module_name)
+		return db.execute("insert into svn_module(name, path, level, active) values(%s, %s, %s, %s)", \
+					module_name, url, 5, 1)
+	else:
+		return result['id']
 
 
-svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/analytics/branches/ts-decision-kernel-1-28/"
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/analytics/branches/idi-DecisionEngine-1-21/"
 #svn_url = "http://v8.googlecode.com/svn/trunk"
 
 
@@ -230,13 +251,17 @@ def fresh_pull(depth):
 
 	log_file_name = pull_log(svn_url, depth)
 
-	assemble(log_file_name)
+	m_id = get_module(svn_url)
+	assemble(log_file_name, m_id)
+
+
 
 def main():
-	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
+	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
+				filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 
-	fresh_pull("30")
+	fresh_pull("50")
 
 	#schdule()
 	logging.info('Finished...')
@@ -244,6 +269,5 @@ def main():
 if __name__ == '__main__':
     main()
 	
-
 
 	
