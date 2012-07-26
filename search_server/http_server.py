@@ -83,8 +83,9 @@ class SearchHandler(tornado.web.RequestHandler):
 	def db(self):
 		return self.application.db
 	
+	# TODO
 	def on_finish(self):
-		print 'on_finish ...'
+		pass
 
 	def get(self):
 		# param =''
@@ -93,11 +94,13 @@ class SearchHandler(tornado.web.RequestHandler):
 		# if l4 != None:
 		# 	param += 'l4r=' +l4
 		l5 = self.get_argument("l5", None)
-		param ='l5r=' + l5
+		param = ''
+		if l5 != None:
+			param ='?l5r=' + l5
 
 		input = self.get_argument("input", None)
 		if input == None:
-			self.redirect('/timeline?' + param)
+			self.redirect('/timeline' + param)
 			#raise tornado.web.HTTPError(500, "Please input user account name !")
 		elif input.find('.') != -1:
 			# TODO
@@ -114,7 +117,7 @@ class SearchHandler(tornado.web.RequestHandler):
 	def search_acct_name(self, acct_name):
 		offset = int(self.get_argument("offset", 1))
 			
-		# tracking
+		# TODO tracking
 		self.db.execute("insert into search_history(ip, content) values(%s, %s)", self.request.remote_ip, acct_name)
 		
 		result_size = self.db.get("select count(*) as count from svn_log where acct_name=%s", acct_name)
@@ -156,10 +159,13 @@ class TimelineHandler(tornado.web.RequestHandler):
 		rs = self.get_argument("rs", None)
 
 		if rs == None:
-		 	sql = "select count(*) as count from svn_log where m_id in (select id from svn_module where name=%s)"
-			result = self.db.get(sql, level5)
+			if level5 == None:
+				result = self.db.get("select count(*) as count from svn_log")
+			else:
+			 	sql = "select count(*) as count from svn_log where m_id in (select id from svn_module where name=%s)"
+				result = self.db.get(sql, level5)
+			
 			result_size = int(result['count'])
-			print result['count']
 		else: 
 			result_size = int(rs)
 
@@ -176,8 +182,11 @@ class TimelineHandler(tornado.web.RequestHandler):
 		else:
 			end_index = page_size
 		
-		sql = "select * from svn_log where m_id in (select id from svn_module where name =%s) ORDER BY date_time DESC LIMIT %s, 10"
-		check_in_entries = self.db.query(sql, level5, (offset -1)*PAGE_ITEM)
+		if level5 == None:
+			check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", (offset -1)*PAGE_ITEM)
+		else:
+			sql = "select * from svn_log where m_id in (select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10"
+			check_in_entries = self.db.query(sql, level5, (offset -1)*PAGE_ITEM)
 
 		change_path_set = []
 
