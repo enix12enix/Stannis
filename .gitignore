@@ -42,3 +42,7 @@ temp*.html
 *.sublime-*
 
 example*.html
+
+# local data
+Pulling History
+data.sql
