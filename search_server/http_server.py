@@ -26,7 +26,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
-			(r"/search", SearchHandler),
+			(r"/search", TimelineHandler),
 			(r"/diff", DiffHandler),
 			(r"/timeline", TimelineHandler),
 			(r"/fulldiff", GetFullDiffHandler)
@@ -151,6 +151,10 @@ class TimelineHandler(tornado.web.RequestHandler):
 	def db(self):
 		return self.application.db
 
+	def on_finish(self):
+		# simple uri tracking
+		self.db.execute("insert into search_history(ip, content) values(%s, %s)", self.request.remote_ip, self.request.uri)
+
 	def get(self):
 		offset = int(self.get_argument("offset", 1))
 		start_index = int(self.get_argument("start", 1))
@@ -158,13 +162,23 @@ class TimelineHandler(tornado.web.RequestHandler):
 		# level4 = self.get_argument("l4r", None)
 		rs = self.get_argument("rs", None)
 
+		input_ = self.get_argument("input", None)
+
+
 		if rs == None:
 			if level5 == None:
-				result = self.db.get("select count(*) as count from svn_log")
+				if input_ == None:
+					result = self.db.get("select count(*) as count from svn_log")
+				else:
+					result = self.db.get("select count(*) as count from svn_log where acct_name=%s", input_)
 			else:
-			 	sql = "select count(*) as count from svn_log where m_id in (select id from svn_module where name=%s)"
-				result = self.db.get(sql, level5)
-			
+				if input_ == None:
+			 		sql = "select count(*) as count from svn_log where m_id in (select id from svn_module where name=%s)"
+			 		result = self.db.get(sql, level5)
+			 	else:
+			 		sql = "select count(*) as count from svn_log where acct_name=%s and m_id in (select id from svn_module where name=%s)"
+			 		result = self.db.get(sql, input_, level5)
+					
 			result_size = int(result['count'])
 		else: 
 			result_size = int(rs)
@@ -184,17 +198,29 @@ class TimelineHandler(tornado.web.RequestHandler):
 		
 		l5_result = self.db.query("select name from svn_module where level = 5 and active = 1 group by name")
 
+		url_param = "&start=" + str(start_index) + "&rs=" + str(result_size) 
 
 		if level5 == None:
-			check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", (offset -1)*PAGE_ITEM)
-
+			if input_ == None:
+				check_in_entries = self.db.query("select * from svn_log ORDER BY date_time DESC LIMIT %s, 10", (offset -1)*PAGE_ITEM)
+			else:
+				check_in_entries = self.db.query("select * from svn_log where acct_name=%s ORDER BY date_time DESC LIMIT %s, 10", \
+							input_, (offset -1)*PAGE_ITEM)
+				url_param += '&input='+input_
 			l5_result_ordered = ['']	
 			for i in l5_result:
-				l5_result_ordered.append(i['name'])
-			
+				l5_result_ordered.append(i['name'])			
 		else:
-			sql = "select * from svn_log where m_id in (select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10"
-			check_in_entries = self.db.query(sql, level5, (offset -1)*PAGE_ITEM)
+			if input_ == None:	
+				url_param += '&l5r=' + level5
+			
+				sql = "select * from svn_log where m_id in (select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10"
+				check_in_entries = self.db.query(sql, level5, (offset -1)*PAGE_ITEM)
+			else:
+				url_param += '&l5r=' + level5 + '&input=' + input_
+				
+				sql = "select * from svn_log where acct_name=%s and m_id in (select id from svn_module where name=%s) ORDER BY date_time DESC LIMIT %s, 10"
+				check_in_entries = self.db.query(sql, input_, level5, (offset -1)*PAGE_ITEM)
 
 			l5_result_ordered = [level5]
 			for i in l5_result:
@@ -202,7 +228,6 @@ class TimelineHandler(tornado.web.RequestHandler):
 					l5_result_ordered.append(i['name'])
 					l5_result_ordered.append
 			l5_result_ordered.append('')
-
 
 		change_path_set = []
 
@@ -217,10 +242,12 @@ class TimelineHandler(tornado.web.RequestHandler):
 		# level 4
 		#l4_result = self.db.query("select id, name from svn_module where level = 4 and active = 1")
 
-		# branch level = 5
+		if input_ == None:
+			input_ = ''
 
 		self.render("timeline.html", result_size=result_size, start_index=start_index, end_index=end_index, \
-			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l5r=l5_result_ordered, l5=level5)
+			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l5r=l5_result_ordered,\
+				 l5=level5, input=input_, url_param=url_param)
 
 
 class DiffHandler(tornado.web.RequestHandler):
