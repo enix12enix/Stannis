@@ -21,11 +21,12 @@ db = tornado.database.Connection("localhost:3306", "stannis", "root", "mysql")
 #svn_url = "http://v8.googlecode.com/svn/trunk/sc/"
 
 def assemble(file_name):
+	logging.debug('assemble method...')
+
 	log_file = open(file_name)
 	checkin = []
 	for line in log_file:
-		if line == split_line:
-			logging.debug('split started...')
+		if line == split_line:			
 			if len(checkin) <> 0:
 				insert_record(checkin)			
 			checkin = []
@@ -116,11 +117,22 @@ def find_split_line(lines):
 		i= i + 1
 	return 3
 
+def filter(filename):
+	# filter pom.xml
+	if filename == 'pom.xml':
+		return True
+	
+	filter_table = ["zip", "rar", "bmp", "png", "gif"]
+
+	for t in filter_table:
+		if filename.split('.')[-1] == t:
+			return True
+
+	return False
 
 	
 def gen_diff(action, path, version, cp_id, filename):
-	# filter pom.xml
-	if filename == 'pom.xml':
+	if filter(filename):
 		return
 
 	if action == "A":
@@ -154,8 +166,13 @@ def delete_file_if_exists(file):
 		
 def pull_log(svn_url, depth):
 	url_dict = svn_url.split('/')
-	log_file_name = url_dict[2] + "_" + url_dict[-1] + ".log"
+	if svn_url[-1] == '/':
+		log_file_name = url_dict[2] + "_" + url_dict[-2] + ".log"
+	else:		
+		log_file_name = url_dict[2] + "_" + url_dict[-1] + ".log"
+
 	delete_file_if_exists(log_file_name)
+
 	cmd = "svn -v log " + svn_url + " -l " + depth + " >> " + log_file_name
 	logging.info('pull cmd: %s', cmd)
 	ret = os.system(cmd)
@@ -178,7 +195,7 @@ max_version=None
 def get_max_version():
 	global max_version
 	if max_version == None:
-		r = db.get("SELECT max(version) as max FROM svn_log")
+		r = db.get("select max(version) as max from svn_log")
 		max_version = r['max']
 	return int(max_version)
 		
@@ -199,7 +216,7 @@ def check_action(svn_url):
 		assemble(log_file_name)
 
 
-svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/ts-decision-kernel-1-28"
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/analytics/branches/ts-decision-kernel-1-28/"
 #svn_url = "http://v8.googlecode.com/svn/trunk"
 
 
@@ -219,7 +236,7 @@ def main():
 	logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 
-	fresh_pull("100")
+	fresh_pull("30")
 
 	#schdule()
 	logging.info('Finished...')
