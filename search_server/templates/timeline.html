@@ -2,9 +2,10 @@
 {% block body %}		 
 	<a href="/" style="text-decoration: none"><h1>Tornado Search</h1></a>
 	<form class="well form-search" method="get" action="/timeline">
-		
+
         <div class="controls">
 				<select id="branch" name="l5r" class="span3">
+					<option></option>
 					{% for b in l5r %}
 						<option>{{b['name']}}</option>
 					{% end %}		
