@@ -201,27 +201,36 @@ def get_max_version():
 	return int(max_version)
 		
 		
-def check_action(svn_url):
+def check_action():
 	print "Start check action..."
 	
-	svn_max = get_last_changed_version(svn_url, "temp_svn.log")
-	current_max = get_max_version()
+	# load url from database, from module table
+	# TODO: Load once, store in mem
+	result = db.query("select path from svn_module where level=5 and active=1")
+	url_list = []
+	for i in result:
+		url_list.append(i['path'])
 
-	if int(svn_max) > current_max:
-		log_file_name = "svn_history.log"
-		delete_file_if_exists(log_file_name)
-		cmd = "svn -v log " + svn_url + " -r " + str(current_max+1) + ":" + svn_max + " >> " + log_file_name
-		logging.info("svn pull cmd: %s", cmd)
-		ret = os.system(cmd)
+	for svn_url in url_list:
+		svn_max = get_last_changed_version(svn_url, "temp_svn.log")
+		current_max = get_max_version()
 
-		m_id = get_module(svn_url)
-		assemble(log_file_name, m_id)
+		if int(svn_max) > current_max:
+			log_file_name = "svn_history.log"
+			delete_file_if_exists(log_file_name)
+			cmd = "svn -v log " + svn_url + " -r " + str(current_max+1) + ":" + svn_max + " >> " + log_file_name
+			logging.info("svn pull cmd: %s", cmd)
+			ret = os.system(cmd)
+
+			m_id = get_module(svn_url)
+			assemble(log_file_name, m_id)
 
 def get_module(url):
 	# default module name
 	url_dict = url.split('/')
 	if url[-1] == '/':
 		module_name = url_dict[-2] 
+		url = url[:-1]
 	else:		
 		module_name = url_dict[-1]
 
@@ -237,13 +246,13 @@ def get_module(url):
 		return result['id']
 
 
-svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/analytics/branches/idi-DecisionEngine-1-21/"
+svn_url = "http://svn.sc4.paypal.com/svn/projects/risk/frameworks/IDI/workflow/branches/idi-DecisionEngine-1-21/"
 #svn_url = "http://v8.googlecode.com/svn/trunk"
 
 
 def schdule():
 	threading.Timer(60, schdule).start()
-	check_action(svn_url)
+	check_action()
 
 def fresh_pull(depth):
 	# invoke pull log at first time
@@ -261,13 +270,10 @@ def main():
 				filename='monitor.log', level=logging.DEBUG)
 	logging.info('Started...')
 
-	fresh_pull("50")
+	#fresh_pull("50")
 
-	#schdule()
+	schdule()
 	logging.info('Finished...')
 
 if __name__ == '__main__':
     main()
-	
-
-	
