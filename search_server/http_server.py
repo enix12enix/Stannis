@@ -26,9 +26,9 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
-			(r"/search", TimelineHandler),
+			(r"/search", SearchHandler),
 			(r"/diff", DiffHandler),
-			(r"/timeline", TimelineHandler),
+			(r"/timeline", SearchHandler),
 			(r"/fulldiff", GetFullDiffHandler)
         ]
         settings = dict(
@@ -78,7 +78,7 @@ def track(req, content):
 
 
 
-class SearchHandler(tornado.web.RequestHandler):
+class OldSearchHandler(tornado.web.RequestHandler):
 	@property
 	def db(self):
 		return self.application.db
@@ -146,7 +146,7 @@ class SearchHandler(tornado.web.RequestHandler):
 		self.render("search.html", acct_name=acct_name, result_size=result_size['count'], page_size=page_size, \
 				actived_page=offset, entries=check_in_entries, change_path_set=change_path_set)
 
-class TimelineHandler(tornado.web.RequestHandler):
+class SearchHandler(tornado.web.RequestHandler):
 	@property
 	def db(self):
 		return self.application.db
@@ -238,9 +238,6 @@ class TimelineHandler(tornado.web.RequestHandler):
 			entry.id)
 			if len(change_path_entries) != 0:
 				change_path_set.append(change_path_entries)
-
-		# level 4
-		#l4_result = self.db.query("select id, name from svn_module where level = 4 and active = 1")
 
 		if input_ == None:
 			input_ = ''
