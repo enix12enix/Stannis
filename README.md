@@ -13,6 +13,7 @@ TODO Order by priority
 
 * Create full diff, asynchronize 
 * Repository url Configurable
+* File name search, email search
 * Support file name search, full text search ?
 * User profile
 * Async track user , add date time column
