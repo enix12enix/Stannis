@@ -242,7 +242,7 @@ class SearchHandler(tornado.web.RequestHandler):
 		if input_ == None:
 			input_ = ''
 
-		self.render("timeline.html", result_size=result_size, start_index=start_index, end_index=end_index, \
+		self.render("search.html", result_size=result_size, start_index=start_index, end_index=end_index, \
 			actived_page=offset, entries=check_in_entries, change_path_set=change_path_set, l5r=l5_result_ordered,\
 				 l5=level5, input=input_, url_param=url_param)
 

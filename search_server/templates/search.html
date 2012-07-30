@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 {% block body %}		 
 	<a href="/" style="text-decoration: none"><h1>Tornado Search</h1></a>
-	<form class="well form-search" method="get" action="/search">
-		<input class="span3" type="text" name="input" value="{{acct_name}}" placeholder="svn account">
+	<form class="well form-search" method="get" action="/timeline">
+
+        <div class="controls">
+				<select id="branch" name="l5r" class="span3">
+					{% for b in l5r %}
+						<option>{{b}}</option>
+					{% end %}		
+				</select>
+		</div></p>
+
+		<input class="span3" type="text" name="input" value="{{input}}" placeholder="svn account"></p>
 		<button type="submit" class="btn">Search</button>
 	</form>
-
-
-	
-  <div class="page-header" align="left"> <h6>{{ result_size }} results </h6></div>
+  <div class="page-header" align="left"> <h3>Change Timeline:</h3><h6>{{ result_size }} results </h6></div>
 	
   <div align="left">
-  {% set  i=0 %}
+  {% set i=0 %}
   {% for entry in entries %}
     {{ modules.Entry(entry) }}
     <div>
@@ -25,7 +31,7 @@
 			{% elif cp.action == 'D' %}
 			    <span class="label">Deleted</span>
 			{% end %}
-			{% if cp.action == 'M' and cp.diff_id <> None and cp.filename <> None %}
+			{% if cp.action == 'M' and cp.diff_id != None and cp.filename != None %}
 				<a href="/diff?cp_id={{cp.id}}">{{ cp.path }}</a>
 		    {% else %}
 				{{ cp.path }}
@@ -41,24 +47,30 @@
   </div>
   
    <div class="pagination" align="center">
-        <ul>
-		  {% if result_size > 10 %}
-			  {% if actived_page <> 1%}
-				<li><a href="/search?acct_name={{acct_name}}&offset={{actived_page-1}}">&laquo;</a></li>   
-			  {% end %}
-					
-			  {% for i in range(1, page_size+1) %}
+        <ul align="left">
+          {% if result_size > 10 %}
+			  {% if actived_page != 1 %}
+			  	{% set ts = "/search?offset=" + str(actived_page-1) + url_param %}
+			  	<li><a href={{ ts }}>&laquo;</a></li> 
+			  {% end %}	
+			
+			  {% for i in range(start_index, end_index+1) %}
 				{% if actived_page == i %}
-					<li class="active"><a href="/search?acct_name={{acct_name}}&offset={{i}}">{{i}}</a></li>
+					<li class="active"><a href="#">{{i}}</a></li>
 				{% else %}
-					<li><a href="/search?acct_name={{acct_name}}&offset={{i}}">{{i}}</a></li>
+					{% set tu = "/search?offset=" + str(i) + url_param %}
+					<li class="prev"><a href={{ tu }}>{{i}}</a></li>
 				{% end %}
 			  {% end %}
-
-			  {% if actived_page < page_size %}
-				<li><a href="/search?acct_name={{acct_name}}&offset={{actived_page+1}}">&raquo;</a></li>
+			  
+			  {% if actived_page < end_index %}
+			  	{% set te = "/search?offset=" + str(actived_page+1) + url_param %}
+				<li class="next"><a href={{ te }}>&raquo;</a></li>
 			  {% end %}
 		  {% end %}
+		
         </ul>
     </div>
+	
+	<script src="{{ static_url( "js/jquery.js" )}}"></script>
 {% end %}
