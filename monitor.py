@@ -189,17 +189,12 @@ def get_last_changed_version(svn_url, file_name):
 			last_rev = l[18:-1]
 			logging.info("Last Changed Rev:" + last_rev) 
 			f.close()
-			return last_rev
+			return int(last_rev)
 	f.close()
 
-max_version=None
-def get_max_version():
-	global max_version
-	if max_version == None:
-		r = db.get("select max(version) as max from svn_log")
-		max_version = r['max']
-	return int(max_version)
-		
+def get_max_version(m_id):
+	r = db.get("select max(version) as max from svn_log where m_id=%s", m_id)	
+	return int(r['max'])	
 		
 def check_action():
 	print "Start check action..."
@@ -213,16 +208,16 @@ def check_action():
 
 	for svn_url in url_list:
 		svn_max = get_last_changed_version(svn_url, "temp_svn.log")
-		current_max = get_max_version()
+		m_id = get_module(svn_url)
+		current_max = get_max_version(m_id)
 
-		if int(svn_max) > current_max:
+		if svn_max > current_max:
 			log_file_name = "svn_history.log"
 			delete_file_if_exists(log_file_name)
-			cmd = "svn -v log " + svn_url + " -r " + str(current_max+1) + ":" + svn_max + " >> " + log_file_name
+			cmd = "svn -v log " + svn_url + " -r " + str(current_max+1) + ":" + str(svn_max) + " >> " + log_file_name
 			logging.info("svn pull cmd: %s", cmd)
 			ret = os.system(cmd)
-
-			m_id = get_module(svn_url)
+			
 			assemble(log_file_name, m_id)
 
 def get_module(url):
